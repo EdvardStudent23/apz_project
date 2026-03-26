@@ -1,0 +1,148 @@
+name: CI/CD – Build & Push Docker Images
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/nanobank
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # Lint & validate docker-compose before building anything
+  # ─────────────────────────────────────────────────────────────────────────
+  validate:
+    name: Validate Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose syntax
+        run: docker compose config --quiet
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Build matrix – one job per service image
+  # ─────────────────────────────────────────────────────────────────────────
+  build:
+    name: Build ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: validate
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: api-gateway
+            context: ./nginx
+            dockerfile: ./nginx/Dockerfile
+
+          - service: auth-service
+            context: ./auth-service
+            dockerfile: ./auth-service/Dockerfile
+
+          - service: core-banking-service
+            context: ./core-banking-service
+            dockerfile: ./core-banking-service/Dockerfile
+
+          - service: history-service
+            context: ./history-service
+            dockerfile: ./history-service/Dockerfile
+
+          - service: bank-market-service
+            context: ./bank-market-service
+            dockerfile: ./bank-market-service/Dockerfile
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Cache Docker layers between runs to speed up builds
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Generate image tags: latest + short SHA
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+
+      - name: Build (and push on main)
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Integration smoke-test: spin up the whole stack on PRs
+  # ─────────────────────────────────────────────────────────────────────────
+  integration-test:
+    name: Integration Smoke Test
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env for CI
+        run: |
+          echo "JWT_SECRET=ci_test_secret_not_for_production" >> .env
+          echo "NEO4J_PASSWORD=ci_neo4j_pass"                >> .env
+
+      - name: Start all services
+        run: docker compose up -d --build
+
+      - name: Wait for API Gateway to be ready
+        run: |
+          echo "Waiting for gateway..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost/health; then
+              echo "Gateway is up!"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Gateway did not become ready in time" && exit 1
+
+      - name: Smoke test – health endpoint
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/health)
+          echo "Health status: $STATUS"
+          [ "$STATUS" = "200" ] || (echo "FAIL: expected 200" && exit 1)
+
+      - name: Smoke test – unauthenticated request returns 401
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/banking/)
+          echo "Banking without JWT: $STATUS"
+          [ "$STATUS" = "401" ] || (echo "FAIL: expected 401" && exit 1)
+
+      - name: Print container logs on failure
+        if: failure()
+        run: docker compose logs --tail=50
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
