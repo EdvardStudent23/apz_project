@@ -7,6 +7,7 @@ from alembic import context
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from src.db.core import Base
+from src.db.tables import Account, Transaction, OutboxEvent  # noqa: F401
 from src.settings import settings
 
 config = context.config

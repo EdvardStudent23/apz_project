@@ -268,8 +268,10 @@ This is the most important flow to keep correct end-to-end.
 2. Core Banking opens a Postgres transaction:
    - locks both account rows (`SELECT … FOR UPDATE`) in deterministic
      order (smaller `account_id` first) to avoid deadlocks,
-   - validates funds + currency,
-   - writes a `transactions` row,
+   - validates funds,
+   - handles **automatic currency conversion** using internal fixed rates
+     (USD, EUR, UAH) if account currencies differ,
+   - writes a `transactions` row (storing both original and target amounts),
    - debits source, credits destination,
    - commits.
 3. **After commit**, publishes `TransactionCreatedEvent` to
@@ -332,6 +334,19 @@ events on crash. The outbox is the standard fix and is non-negotiable.
   consistent even on retries).
 
 ## Conventions every service follows
+
+### Financial Calculations
+Always use `decimal.Decimal` for monetary values. Never use `float` in
+business logic or database models for money. Postgres `Numeric`
+columns map to Python `Decimal`.
+
+### Local Development Bypass
+If a dependency (like the Auth Service) is unreachable at startup,
+services may enable a **bypass mode**:
+- Use a static UUID (`00000000-0000-0000-0000-000000000000`) for the
+  authenticated user to ensure consistency across reloads.
+- Log a clear warning when bypass is enabled.
+- Never enable bypass in non-development environments.
 
 ### FastAPI app shape
 
@@ -422,6 +437,8 @@ make lint                       # pyright + ruff across all services
 cd services/<name> && uv run uvicorn src.api:app --reload --port <port>
 cd services/<name> && uv run alembic upgrade head
 cd services/<name> && uv run alembic revision --autogenerate -m "..."
+cd services/core_banking && uv run stress_test.py
+cd services/core_banking && uv run client_demo.py
 
 # E2E:
 make test-e2e                   # spins compose profile=test, runs pytest
