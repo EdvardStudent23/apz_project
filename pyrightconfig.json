@@ -1,0 +1,20 @@
+{
+  "include": ["libs", "services"],
+  "exclude": ["**/__pycache__", "**/.venv", "**/migrations/versions"],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.13",
+  "typeCheckingMode": "standard",
+  "reportMissingImports": "error",
+  "executionEnvironments": [
+    { "root": "services/_template" },
+    { "root": "services/auth" },
+    { "root": "services/core_banking" },
+    { "root": "services/history" },
+    { "root": "services/bankmarket" },
+    { "root": "libs/common" },
+    { "root": "libs/logging" },
+    { "root": "libs/messaging" },
+    { "root": "libs/auth_client" }
+  ]
+}
