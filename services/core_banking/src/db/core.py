@@ -11,7 +11,12 @@ class Base(DeclarativeBase):
 
 
 def make_engine() -> AsyncEngine:
-    return create_async_engine(settings.database_url, future=True)
+    return create_async_engine(
+        settings.database_url,
+        future=True,
+        pool_size=20,
+        max_overflow=10,
+    )
 
 
 def make_session_factory(engine: AsyncEngine) -> async_sessionmaker:
