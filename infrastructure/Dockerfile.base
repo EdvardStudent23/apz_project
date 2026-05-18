@@ -1,0 +1,19 @@
+# Shared base image for all NanoBank Python services.
+# Provides Python 3.13, uv, and common system libraries required by asyncpg / argon2.
+# Each service Dockerfile does FROM infrastructure/Dockerfile.base or
+# copies only the uv binary from it — see services/*/Dockerfile.
+FROM python:3.13-slim
+
+# Install uv (fast Python package manager used across the monorepo)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# System packages:
+#   gcc + libpq-dev  — needed to compile asyncpg's C extension
+#   curl             — used by HEALTHCHECK probes
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Disable uv's own virtualenv creation; we want the system site-packages
+# so the final CMD can call uvicorn directly.
+ENV UV_SYSTEM_PYTHON=1

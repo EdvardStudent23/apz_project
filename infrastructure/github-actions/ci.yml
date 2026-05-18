@@ -1,0 +1,118 @@
+# Canonical copy lives at .github/workflows/ci.yml (GitHub reads that path).
+# This file is kept here as the CLAUDE.md architecture reference.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Lint & type-check (fast, no services needed) ───────────────────────────
+  lint:
+    name: Lint & type-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python 3.13
+        run: uv python install 3.13
+
+      - name: Install dev dependencies
+        run: uv sync --dev
+
+      - name: ruff format check
+        run: uv run ruff format --check .
+
+      - name: ruff lint
+        run: uv run ruff check .
+
+      - name: pyright
+        run: uv run pyright
+
+  # ── Unit tests (no external services) ─────────────────────────────────────
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python 3.13
+        run: uv python install 3.13
+
+      - name: Install workspace dependencies (all packages)
+        run: uv sync --dev
+
+      - name: Run auth tests
+        run: uv run --package auth pytest services/auth/tests/ -v
+
+      - name: Run core_banking tests
+        run: uv run --package core-banking pytest services/core_banking/tests/ -v
+
+      - name: Run history tests
+        run: uv run --package history pytest services/history/tests/ -v
+
+      - name: Run bankmarket tests
+        run: uv run --package bankmarket pytest services/bankmarket/tests/ -v
+
+  # ── Docker build smoke-check ───────────────────────────────────────────────
+  build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build auth image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/auth/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build core_banking image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/core_banking/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build history image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/history/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build bankmarket image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/bankmarket/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

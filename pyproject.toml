@@ -44,3 +44,7 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (deselect with '-m not slow')",
+    "failover: marks tests that stop/start Docker containers (require full stack)",
+]

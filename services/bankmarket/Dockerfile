@@ -12,11 +12,11 @@ WORKDIR /app
 
 COPY pyproject.toml uv.lock* ./
 COPY libs/ ./libs/
-COPY services/history/ ./services/history/
+COPY services/bankmarket/ ./services/bankmarket/
 
-RUN uv sync --package history --no-dev
+RUN uv sync --package bankmarket --no-dev
 
-WORKDIR /app/services/history
+WORKDIR /app/services/bankmarket
 
 EXPOSE 8000
 

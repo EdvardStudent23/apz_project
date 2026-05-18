@@ -3,7 +3,7 @@ FROM python:3.13-slim
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc curl \
+    && apt-get install -y --no-install-recommends gcc libpq-dev curl \
     && rm -rf /var/lib/apt/lists/*
 
 ENV UV_SYSTEM_PYTHON=1
@@ -12,11 +12,11 @@ WORKDIR /app
 
 COPY pyproject.toml uv.lock* ./
 COPY libs/ ./libs/
-COPY services/history/ ./services/history/
+COPY services/core_banking/ ./services/core_banking/
 
-RUN uv sync --package history --no-dev
+RUN uv sync --package core-banking --no-dev
 
-WORKDIR /app/services/history
+WORKDIR /app/services/core_banking
 
 EXPOSE 8000
 
