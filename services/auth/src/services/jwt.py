@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import bcrypt
-from jose import JWTError, jwt
+import jwt as pyjwt
 
 from src.settings import settings
 
@@ -33,7 +33,12 @@ def _make_token(
     }
     if extra:
         payload.update(extra)
-    token = jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    token = pyjwt.encode(
+        payload,
+        settings.jwt_secret_key,
+        algorithm=settings.jwt_algorithm,
+        headers={"kid": "default"},
+    )
     return token, jti
 
 
@@ -51,6 +56,6 @@ def create_refresh_token(user_id: int) -> tuple[str, str, datetime]:
 
 def decode_token(token: str) -> Optional[dict]:
     try:
-        return jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
-    except JWTError:
+        return pyjwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+    except pyjwt.InvalidTokenError:
         return None

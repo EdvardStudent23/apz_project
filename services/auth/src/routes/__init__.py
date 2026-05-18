@@ -1,8 +1,11 @@
+import base64
+import json
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db import get_db, User
 from src.services import auth_service
+from src.settings import settings
 from src.routes.schemas import (
     RegisterRequest,
     LoginRequest,
@@ -14,22 +17,44 @@ from src.routes.schemas import (
 )
 from src.routes.dependencies import get_current_user, get_bearer_token
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(tags=["auth"])
 
 
-@router.post("/register", response_model=AuthResponse, status_code=201)
+@router.get("/.well-known/jwks.json")
+async def get_jwks():
+    """Export JWT public key in JWKS format for token verification."""
+    if settings.jwt_algorithm == "HS256":
+        key_bytes = settings.jwt_secret_key.encode()
+        key_b64 = base64.urlsafe_b64encode(key_bytes).decode().rstrip("=")
+        return {
+            "keys": [
+                {
+                    "kty": "oct",
+                    "k": key_b64,
+                    "kid": "default",
+                    "alg": "HS256",
+                }
+            ]
+        }
+    return {"keys": []}
+
+
+auth_router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@auth_router.post("/register", response_model=AuthResponse, status_code=201)
 async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     user, tokens = await auth_service.register(data, db)
     return AuthResponse(user=UserResponse.model_validate(user), tokens=tokens)
 
 
-@router.post("/login", response_model=AuthResponse)
+@auth_router.post("/login", response_model=AuthResponse)
 async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
     user, tokens = await auth_service.login(data, db)
     return AuthResponse(user=UserResponse.model_validate(user), tokens=tokens)
 
 
-@router.post("/logout", response_model=MessageResponse)
+@auth_router.post("/logout", response_model=MessageResponse)
 async def logout(
     all_devices: bool = Query(default=False),
     token: str = Depends(get_bearer_token),
@@ -39,20 +64,23 @@ async def logout(
     return MessageResponse(message=msg)
 
 
-@router.post("/refresh", response_model=TokenResponse)
+@auth_router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(data: RefreshRequest, db: AsyncSession = Depends(get_db)):
     return await auth_service.refresh(data.refresh_token, db)
 
 
-@router.get("/validate")
+@auth_router.get("/validate")
 async def validate(current_user: dict = Depends(get_current_user)):
     return {"valid": True, "user": current_user}
 
 
-@router.get("/me", response_model=UserResponse)
+@auth_router.get("/me", response_model=UserResponse)
 async def get_me(
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     user = await db.get(User, current_user["user_id"])
     return UserResponse.model_validate(user)
+
+
+router.include_router(auth_router)

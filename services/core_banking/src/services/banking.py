@@ -10,6 +10,7 @@ from src.services.exceptions import (
     CurrencyMismatch,
     InsufficientFunds,
     InvalidAmount,
+    UnauthorizedAccount,
 )
 
 
@@ -17,14 +18,15 @@ class BankingService:
     def __init__(self, repository: BankingRepository) -> None:
         self.repository = repository
 
-    async def create_account(self, user_id: UUID, currency: str) -> Account:
-        return await self.repository.create_account(user_id, currency.upper())
+    async def create_account(self, user_id: UUID, currency: str, initial_balance: float = 0.0) -> Account:
+        return await self.repository.create_account(user_id, currency.upper(), initial_balance)
 
     async def get_user_accounts(self, user_id: UUID) -> list[Account]:
         return await self.repository.get_accounts_by_user(user_id)
 
     async def transfer_money(
         self,
+        user_id: UUID,
         sender_account_id: UUID,
         receiver_account_id: UUID,
         amount: float,
@@ -37,7 +39,7 @@ class BankingService:
 
         # Order account IDs to prevent deadlocks (smaller UUID first)
         ordered_ids = sorted([sender_account_id, receiver_account_id])
-        
+
         # Lock accounts in order
         accounts_map: dict[UUID, Account] = {}
         for account_id in ordered_ids:
@@ -48,6 +50,10 @@ class BankingService:
 
         sender = accounts_map[sender_account_id]
         receiver = accounts_map[receiver_account_id]
+
+        # Verify sender account belongs to the authenticated user
+        if sender.user_id != user_id:
+            raise UnauthorizedAccount("Sender account does not belong to this user")
 
         # Calculate target amount with conversion if needed
         target_amount = decimal_amount
@@ -92,6 +98,8 @@ class BankingService:
                 "transaction_id": str(transaction.id),
                 "sender_account_id": str(sender_account_id),
                 "receiver_account_id": str(receiver_account_id),
+                "sender_user_id": str(sender.user_id),
+                "receiver_user_id": str(receiver.user_id),
                 "amount": float(decimal_amount),
                 "target_amount": float(target_amount),
                 "sender_currency": sender.currency,

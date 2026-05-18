@@ -26,3 +26,8 @@ class CurrencyMismatch(DomainError):
 
 class InvalidAmount(DomainError):
     message = "invalid amount"
+
+
+class UnauthorizedAccount(DomainError):
+    status_code = 403
+    message = "account does not belong to this user"

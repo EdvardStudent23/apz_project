@@ -130,7 +130,7 @@ services:
     restart: "no"
     command: >
       mongosh --host mongo_1:27017 --eval
-      'rs.initiate({_id:"rs0",members:[{_id:0,host:"mongo_1:27017"},{_id:1,host:"mongo_2:27017"},{_id:2,host:"mongo_3:27017"}]})'
+      'try { rs.initiate({_id:"rs0",members:[{_id:0,host:"mongo_1:27017"},{_id:1,host:"mongo_2:27017"},{_id:2,host:"mongo_3:27017"}]}) } catch(e) { if (e.message.includes("already initialized")) { print("Replica set already initialized"); } else { throw e; } }'
 
   neo4j:
     image: neo4j:5
@@ -304,6 +304,7 @@ services:
     image: nginx:1.27-alpine
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./web:/app/web:ro
     ports:
       - "8080:8080"
     networks:

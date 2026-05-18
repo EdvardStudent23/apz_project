@@ -2,17 +2,17 @@
 
 # ── Stack lifecycle ────────────────────────────────────────────────────────────
 up:
-	docker compose up -d --build
+	docker-compose up -d --build
 
 down:
-	docker compose down
+	docker-compose down
 
 # Usage: make logs SVC=auth_1
 logs:
-	docker compose logs -f $(SVC)
+	docker-compose logs -f $(SVC)
 
 build:
-	docker compose build
+	docker-compose build
 
 # ── Code quality ───────────────────────────────────────────────────────────────
 ruff:

@@ -24,7 +24,7 @@ async def create_account(
     data: AccountCreate,
     service: Annotated[BankingService, Depends(get_banking_service)],
 ) -> ApiResponse:
-    account = await service.create_account(user_id, data.currency)
+    account = await service.create_account(user_id, data.currency, data.initial_balance)
     await service.repository.session.commit()
     return ApiResponse(
         status=True,
@@ -68,6 +68,7 @@ async def transfer_money(
     bind_contextvars(user_id=str(user_id), request_id=request_id)
 
     transaction = await service.transfer_money(
+        user_id=user_id,
         sender_account_id=data.sender_account_id,
         receiver_account_id=data.receiver_account_id,
         amount=data.amount,

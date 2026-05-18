@@ -12,8 +12,8 @@ class BankingRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def create_account(self, user_id: UUID, currency: str) -> Account:
-        account = Account(user_id=user_id, currency=currency, balance=0.0)
+    async def create_account(self, user_id: UUID, currency: str, initial_balance: float = 0.0) -> Account:
+        account = Account(user_id=user_id, currency=currency, balance=initial_balance)
         self.session.add(account)
         await self.session.flush()
         return account

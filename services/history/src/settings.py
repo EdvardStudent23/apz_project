@@ -7,10 +7,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     service_name: str = "history"
-    mongo_url: str = "mongodb://localhost:27017/?replicaSet=rs0"
+    mongo_url: str = "mongodb://mongo_1:27017,mongo_2:27017,mongo_3:27017/?replicaSet=rs0"
     mongo_db: str = "history"
-    rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
-    auth_jwks_url: str = "http://auth:8000/.well-known/jwks.json"
+    rabbitmq_url: str = "amqp://rabbit:rabbit@rabbitmq:5672/"
+    auth_jwks_url: str = "http://auth_1:8001/.well-known/jwks.json"
 
 
 settings = Settings()

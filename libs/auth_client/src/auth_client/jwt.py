@@ -35,9 +35,19 @@ def verify_jwt(token: str, jwks: dict[str, Any], audience: str | None = None) ->
 
 
 def _key_for(jwks: dict[str, Any], kid: str | None) -> Any:
+    import base64
     for entry in jwks.get("keys", []):
         if entry.get("kid") == kid:
-            return RSAAlgorithm.from_jwk(entry)
+            kty = entry.get("kty")
+            if kty == "oct":
+                k = entry.get("k")
+                # Add padding if needed
+                padding = 4 - (len(k) % 4)
+                if padding != 4:
+                    k += "=" * padding
+                return base64.urlsafe_b64decode(k)
+            elif kty == "RSA":
+                return RSAAlgorithm.from_jwk(entry)
     return None
 
 
@@ -55,6 +65,10 @@ async def get_current_user(
 
     try:
         payload = verify_jwt(token, jwks)
-        return UUID(payload["sub"])
+        sub = payload["sub"]
+        try:
+            return UUID(sub)
+        except ValueError:
+            return UUID(int=int(sub))
     except (InvalidTokenError, KeyError, ValueError) as exc:
         raise HTTPException(status_code=401, detail=str(exc))

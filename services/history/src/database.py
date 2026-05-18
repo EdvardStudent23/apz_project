@@ -1,8 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-import os
 
-MONGODB_URL = "mongodb://mongo1:27017,mongo2:27018,mongo3:27019/?replicaSet=rs0"
+from src.settings import settings
 
-client = AsyncIOMotorClient(MONGODB_URL)
-db = client.nanobank_history 
+client = AsyncIOMotorClient(settings.mongo_url)
+db = client[settings.mongo_db]
 history_collection = db.get_collection("transactions")
