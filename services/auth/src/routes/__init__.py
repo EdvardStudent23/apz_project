@@ -1,6 +1,7 @@
 import base64
 import json
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db import get_db, User
@@ -13,6 +14,7 @@ from src.routes.schemas import (
     AuthResponse,
     TokenResponse,
     UserResponse,
+    UserLookupResponse,
     MessageResponse,
 )
 from src.routes.dependencies import get_current_user, get_bearer_token
@@ -81,6 +83,36 @@ async def get_me(
 ):
     user = await db.get(User, current_user["user_id"])
     return UserResponse.model_validate(user)
+
+
+@auth_router.get("/users/lookup", response_model=UserLookupResponse)
+async def lookup_user(
+    email: str | None = Query(default=None),
+    username: str | None = Query(default=None),
+    _: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Resolve a recipient for a payment flow.
+
+    Authenticated to prevent unauthenticated email/username enumeration.
+    Returns only the public-safe slice (id + username) — never the email,
+    even when looked up by it.
+    """
+    if not email and not username:
+        raise HTTPException(status_code=400, detail="email or username is required")
+
+    needle = (email or username or "").strip().lower()
+    if not needle:
+        raise HTTPException(status_code=400, detail="email or username is required")
+
+    column = User.email if email else User.username
+    user = await db.scalar(select(User).where(column == needle))
+    if not user:
+        raise HTTPException(status_code=404, detail="No user matches that email")
+    if not user.is_active:
+        raise HTTPException(status_code=404, detail="No user matches that email")
+
+    return UserLookupResponse(id=user.id, username=user.username)
 
 
 router.include_router(auth_router)

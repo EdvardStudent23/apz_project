@@ -154,6 +154,10 @@ bank-microservices/
 │   ├── history/               # Person #4 — FastAPI + MongoDB + RabbitMQ consumer
 │   ├── bankmarket/            # Person #5 — FastAPI + Neo4j + RabbitMQ producer
 │   └── _template/             # starter skeleton — copy this when adding a service
+├── web/                       # React + TS + Vite SPA — served by its own nginx container
+│   ├── src/                   # pages, components, api client, auth context
+│   ├── Dockerfile             # multi-stage: node build → nginx-alpine serve
+│   └── nginx.conf             # runtime SPA fallback to index.html
 ├── specs/                     # Spec-Driven Development artifacts (spec → plan → tasks)
 └── docs/
     ├── vision.md              # short product vision (course deliverable)

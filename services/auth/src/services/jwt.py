@@ -20,7 +20,7 @@ def _make_token(
     subject: str,
     token_type: str,
     expires_delta: timedelta,
-    extra: dict = None,
+    extra: Optional[dict] = None,
 ) -> tuple[str, str]:
     jti = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
@@ -42,9 +42,16 @@ def _make_token(
     return token, jti
 
 
-def create_access_token(user_id: int, username: str) -> tuple[str, str, datetime]:
+def create_access_token(
+    user_id: int, username: str, is_admin: bool = False
+) -> tuple[str, str, datetime]:
     delta = timedelta(minutes=settings.access_token_expire_minutes)
-    token, jti = _make_token(str(user_id), "access", delta, {"username": username})
+    token, jti = _make_token(
+        str(user_id),
+        "access",
+        delta,
+        {"username": username, "is_admin": is_admin},
+    )
     return token, jti, datetime.now(timezone.utc) + delta
 
 

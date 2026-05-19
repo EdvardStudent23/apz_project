@@ -1,7 +1,7 @@
 import asyncio
 import json
 import aio_pika
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import history_collection
 from app.models import TransactionEvent
 
@@ -18,7 +18,7 @@ async def process_message(message: aio_pika.IncomingMessage):
             # Validate data and add timestamp
             event_data = TransactionEvent(**payload)
             event_dict = event_data.dict()
-            event_dict["timestamp"] = datetime.utcnow()
+            event_dict["timestamp"] = datetime.now(timezone.utc)
 
             # Save to MongoDB Replica Set
             await history_collection.insert_one(event_dict)

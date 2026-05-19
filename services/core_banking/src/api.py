@@ -12,6 +12,7 @@ from src.db.core import make_engine, make_session_factory
 from src.messaging.outbox import OutboxRelay
 from src.middleware import ExceptionMiddleware
 from src.routes.banking import router as banking_router
+from src.routes.holds import router as holds_router
 from src.settings import settings
 from src.routes.common.deps import get_current_user
 from uuid import uuid4, UUID
@@ -60,3 +61,4 @@ app.add_middleware(ExceptionMiddleware)
 app.add_middleware(RequestIdMiddleware)
 
 app.include_router(banking_router, tags=["banking"])
+app.include_router(holds_router, tags=["holds"])

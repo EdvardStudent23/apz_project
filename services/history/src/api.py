@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import sys
 
 import aio_pika
@@ -38,7 +38,7 @@ async def process_message(message: aio_pika.IncomingMessage):
                 "amount": event_data.get("amount"),
                 "currency": event_data.get("sender_currency"),
                 "type": "transfer",
-                "timestamp": datetime.utcnow()
+                "timestamp": datetime.now(timezone.utc),
             }
             sys.stderr.write(f"[LISTENER] Inserting history record: {json.dumps(history_record, default=str)}\n")
             sys.stderr.flush()

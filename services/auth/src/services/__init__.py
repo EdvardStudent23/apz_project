@@ -42,6 +42,7 @@ class AuthService:
             username=data.username,
             email=data.email,
             hashed_password=hash_password(data.password),
+            is_admin=data.username.lower() in settings.admin_username_set,
         )
         db.add(user)
         await db.commit()
@@ -141,7 +142,9 @@ class AuthService:
     # ------------------------------------------------------------------ #
 
     async def _issue_tokens(self, user: User) -> TokenResponse:
-        access_token, access_jti, access_exp = create_access_token(user.id, user.username)
+        access_token, access_jti, access_exp = create_access_token(
+            user.id, user.username, user.is_admin
+        )
         refresh_token, refresh_jti, _ = create_refresh_token(user.id)
 
         await redis_manager.save_session(

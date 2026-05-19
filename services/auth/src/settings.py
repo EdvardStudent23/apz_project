@@ -26,6 +26,15 @@ class Settings(BaseSettings):
     app_port: int = Field(default=8001, env="APP_PORT")
     debug: bool = Field(default=False, env="DEBUG")
 
+    # Admin promotion: comma-separated list of usernames that should be
+    # elevated to admin on registration / login. Compared case-insensitively
+    # against the normalised (lowercased) username.
+    admin_usernames: str = Field(default="", env="ADMIN_USERNAMES")
+
+    @property
+    def admin_username_set(self) -> set[str]:
+        return {u.strip().lower() for u in self.admin_usernames.split(",") if u.strip()}
+
     @property
     def database_url(self) -> str:
         return (

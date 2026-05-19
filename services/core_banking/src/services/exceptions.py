@@ -31,3 +31,23 @@ class InvalidAmount(DomainError):
 class UnauthorizedAccount(DomainError):
     status_code = 403
     message = "account does not belong to this user"
+
+
+class HoldNotFound(DomainError):
+    status_code = 404
+    message = "hold not found"
+
+
+class HoldAlreadyResolved(DomainError):
+    status_code = 409
+    message = "hold has already been released or completed"
+
+
+class AccountClosed(DomainError):
+    status_code = 409
+    message = "account is closed"
+
+
+class AccountNotEmpty(DomainError):
+    status_code = 409
+    message = "account cannot be closed while it still holds funds or has active holds"

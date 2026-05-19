@@ -190,6 +190,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
       REFRESH_TOKEN_EXPIRE_DAYS: 7
       APP_PORT: 8001
+      ADMIN_USERNAMES: ${ADMIN_USERNAMES:-admin}
     ports:
       - "8001:8001"
     networks:
@@ -218,6 +219,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
       REFRESH_TOKEN_EXPIRE_DAYS: 7
       APP_PORT: 8001
+      ADMIN_USERNAMES: ${ADMIN_USERNAMES:-admin}
     ports:
       - "8002:8001"
     networks:
@@ -228,6 +230,23 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+
+  # One-shot migration container — applies Alembic head before core_banking starts.
+  # Required: without this, the app starts against an empty database and every
+  # /accounts and /transfers call returns 500.
+  core_banking_migrate:
+    build:
+      context: .
+      dockerfile: services/core_banking/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://banking_user:banking_secret@core_banking_db:5432/core_banking
+    networks:
+      - bank_net
+    depends_on:
+      core_banking_db:
+        condition: service_healthy
+    command: ["uv", "run", "alembic", "upgrade", "head"]
+    restart: "no"
 
   core_banking:
     build:
@@ -242,8 +261,8 @@ services:
     networks:
       - bank_net
     depends_on:
-      core_banking_db:
-        condition: service_healthy
+      core_banking_migrate:
+        condition: service_completed_successfully
       rabbitmq:
         condition: service_healthy
       auth_1:
@@ -297,6 +316,18 @@ services:
     restart: unless-stopped
 
   # --------------------------------------------------------------------------
+  # Web UI (React + Vite, served by its own nginx)
+  # --------------------------------------------------------------------------
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    networks:
+      - bank_net
+    restart: unless-stopped
+
+  # --------------------------------------------------------------------------
   # API Gateway
   # --------------------------------------------------------------------------
 
@@ -304,7 +335,6 @@ services:
     image: nginx:1.27-alpine
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./web:/app/web:ro
     ports:
       - "8080:8080"
     networks:
@@ -319,5 +349,7 @@ services:
       history:
         condition: service_started
       bankmarket:
+        condition: service_started
+      web:
         condition: service_started
     restart: unless-stopped

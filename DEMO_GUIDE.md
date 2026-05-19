@@ -4,11 +4,11 @@ A complete guide to demonstrating your microservices-based digital banking syste
 
 ## 📍 Quick Access
 
-- **Interactive Dashboard**: `http://localhost:8080`
-- **Documentation**: See files in `/web/` directory
-- **Demo Script**: `web/DEMO_SCRIPT.md` (step-by-step talking points)
-- **Quick Reference**: `web/QUICK_REFERENCE.md` (cheat sheet)
-- **UI Documentation**: `web/README.md` (feature descriptions)
+- **Web UI**: `http://localhost:8080` (React SPA — register → login → dashboard → transfer → history)
+- **Web app docs**: `web/README.md`
+- **Legacy single-page demo** (kept for reference): `docs/legacy/web-demo/`
+- **Demo Script (legacy)**: `docs/legacy/web-demo/DEMO_SCRIPT.md`
+- **Quick Reference (legacy)**: `docs/legacy/web-demo/QUICK_REFERENCE.md`
 
 ---
 

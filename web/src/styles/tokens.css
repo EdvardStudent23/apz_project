@@ -1,0 +1,187 @@
+:root {
+  color-scheme: light;
+
+  --color-bg: #f6f7fb;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f0f2f7;
+  --color-border: #e5e7ef;
+  --color-border-strong: #d4d8e3;
+
+  --color-text: #1a1d2b;
+  --color-text-muted: #6b7280;
+  --color-text-soft: #9aa1ad;
+
+  --color-accent: #5b5bd6;
+  --color-accent-strong: #4848bd;
+  --color-accent-soft: #eef0ff;
+  --color-accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  --color-success: #15803d;
+  --color-success-bg: #ecfdf5;
+  --color-success-border: #b9f0d0;
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fef2f2;
+  --color-danger-border: #fbd0d0;
+  --color-danger-bg-hover: #fee2e2;
+  --color-info: #1d4ed8;
+  --color-info-bg: #eff6ff;
+  --color-info-border: #c7d6fc;
+  --color-warn: #92400e;
+  --color-warn-bg: #fffbeb;
+  --color-warn-border: #fce4b6;
+
+  --color-backdrop: rgba(15, 18, 36, 0.45);
+  --color-on-accent: #ffffff;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 18, 36, 0.06);
+  --shadow-md: 0 6px 18px rgba(15, 18, 36, 0.08);
+  --shadow-lg: 0 14px 40px rgba(15, 18, 36, 0.12);
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'Noto Sans', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.25rem;
+  --fs-2xl: 1.5rem;
+  --fs-3xl: 1.875rem;
+  --fs-4xl: 2.25rem;
+
+  --transition: 160ms ease;
+}
+
+/* ── Dark theme ────────────────────────────────────────────────────────
+ * Activated either by `<html data-theme="dark">` (explicit user choice,
+ * set by ThemeContext) or by `prefers-color-scheme: dark` when the user
+ * hasn't expressed a preference and we leave the attribute unset.
+ * Keep all overrides as variable swaps — no rule should change layout. */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #0b0d12;
+  --color-surface: #15171f;
+  --color-surface-muted: #1c1f29;
+  --color-border: #262a36;
+  --color-border-strong: #353a4a;
+
+  --color-text: #e8eaf0;
+  --color-text-muted: #9aa1ad;
+  --color-text-soft: #6b7280;
+
+  --color-accent: #8b89ff;
+  --color-accent-strong: #a3a1ff;
+  --color-accent-soft: rgba(139, 137, 255, 0.16);
+  --color-accent-gradient: linear-gradient(135deg, #7a7bff 0%, #b25bff 100%);
+
+  --color-success: #4ade80;
+  --color-success-bg: rgba(34, 197, 94, 0.14);
+  --color-success-border: rgba(74, 222, 128, 0.4);
+
+  --color-danger: #f87171;
+  --color-danger-bg: rgba(239, 68, 68, 0.14);
+  --color-danger-border: rgba(248, 113, 113, 0.4);
+  --color-danger-bg-hover: rgba(239, 68, 68, 0.24);
+
+  --color-info: #93c5fd;
+  --color-info-bg: rgba(59, 130, 246, 0.14);
+  --color-info-border: rgba(147, 197, 253, 0.4);
+
+  --color-warn: #fbbf24;
+  --color-warn-bg: rgba(245, 158, 11, 0.14);
+  --color-warn-border: rgba(251, 191, 36, 0.4);
+
+  --color-backdrop: rgba(0, 0, 0, 0.65);
+  --color-on-accent: #0b0d12;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 14px 40px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --color-bg: #0b0d12;
+    --color-surface: #15171f;
+    --color-surface-muted: #1c1f29;
+    --color-border: #262a36;
+    --color-border-strong: #353a4a;
+
+    --color-text: #e8eaf0;
+    --color-text-muted: #9aa1ad;
+    --color-text-soft: #6b7280;
+
+    --color-accent: #8b89ff;
+    --color-accent-strong: #a3a1ff;
+    --color-accent-soft: rgba(139, 137, 255, 0.16);
+    --color-accent-gradient: linear-gradient(135deg, #7a7bff 0%, #b25bff 100%);
+
+    --color-success: #4ade80;
+    --color-success-bg: rgba(34, 197, 94, 0.14);
+    --color-success-border: rgba(74, 222, 128, 0.4);
+
+    --color-danger: #f87171;
+    --color-danger-bg: rgba(239, 68, 68, 0.14);
+    --color-danger-border: rgba(248, 113, 113, 0.4);
+    --color-danger-bg-hover: rgba(239, 68, 68, 0.24);
+
+    --color-info: #93c5fd;
+    --color-info-bg: rgba(59, 130, 246, 0.14);
+    --color-info-border: rgba(147, 197, 253, 0.4);
+
+    --color-warn: #fbbf24;
+    --color-warn-bg: rgba(245, 158, 11, 0.14);
+    --color-warn-border: rgba(251, 191, 36, 0.4);
+
+    --color-backdrop: rgba(0, 0, 0, 0.65);
+    --color-on-accent: #0b0d12;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 14px 40px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Smooth transition between themes — only colors, never layout. */
+html {
+  transition: background var(--transition), color var(--transition);
+}
+body,
+.card,
+.input,
+.select,
+.btn,
+.banner,
+.modal,
+.account-tile,
+.txn-row,
+.shell-sidebar,
+.shell-topbar,
+.user-chip {
+  transition:
+    background var(--transition),
+    background-color var(--transition),
+    color var(--transition),
+    border-color var(--transition);
+}
